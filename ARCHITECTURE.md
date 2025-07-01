@@ -19,9 +19,10 @@
 
 | Layer | Purpose | Dependencies | Rules |
 |-------|---------|--------------|-------|
-| **Domain** | 순수 비즈니스 로직 | 없음 (외부 독립) | ❌ Flutter, DB, API 금지<br>✅ 엔티티, 유스케이스, 포트만 |
-| **Data** | 외부 데이터 구현 | Domain만 의존 | ✅ Repository 구현체<br>✅ DataSource, Model |
-| **Presentation** | UI 어댑터 | Domain만 의존 | ✅ BLoC, Widget, Theme<br>❌ Data 레이어 직접 접근 금지 |
+| **Domain** | 순수 비즈니스 로직 (What) | 없음 (외부 독립) | ❌ Flutter, DB, API 금지<br>✅ 엔티티, 포트(Repository Interface)만 |
+| **Application** | 앱 기능 실행 (How) | Domain만 의존 | ✅ 유스케이스, 애플리케이션 서비스 |
+| **Presentation** | UI 어댑터 (Incoming) | Application, Domain 의존 | ✅ BLoC, Widget, Theme<br>❌ Infrastructure 직접 접근 금지 |
+| **Infrastructure** | 외부 시스템 구현 (Outgoing)| Domain만 의존 | ✅ Repository 구현체<br>✅ DataSource, Model, 외부 API 연동 |
 | **Core** | 공통 인프라 | 모든 레이어에서 사용 | ✅ DI, 상수, 유틸리티 |
 
 ---
@@ -38,37 +39,37 @@ lib/
 │   ├── utils/                      # 유틸리티 함수
 │   └── extensions/                 # 확장 함수
 │
-├── domain/                         # 👑 비즈니스 레이어 (중심)
+├── domain/                         # 👑 비즈니스 레이어 (What)
 │   ├── entities/                   # 비즈니스 엔티티
 │   │   └── message_entity.dart
-│   ├── usecases/                   # 비즈니스 로직
-│   │   ├── get_messages_usecase.dart
-│   │   └── send_message_usecase.dart
 │   ├── repositories/               # 포트 (인터페이스)
 │   │   └── chat_repository.dart
 │   └── failures/                   # 도메인 실패
 │       └── failure.dart
 │
-├── data/                          # 🔌 인프라스트럭처 어댑터
-│   ├── datasources/               # 외부 데이터 소스
-│   │   ├── chat_local_datasource.dart
-│   │   └── chat_remote_datasource.dart
-│   ├── models/                    # 데이터 변환 모델
-│   │   ├── message_model.dart
-│   │   └── message_model.g.dart
-│   └── repositories/              # Repository 구현체
-│       └── chat_repository_impl.dart
+├── application/                    # 💼 애플리케이션 레이어 (How)
+│   └── usecases/                   # 비즈니스 로직 실행
+│       ├── get_messages_usecase.dart
+│       └── send_message_usecase.dart
 │
-└── presentation/                  # 🎨 UI 어댑터
-    ├── bloc/                      # 상태 관리
+├── infrastructure/                 # 🔌 외부 시스템 어댑터 (Outgoing)
+│   ├── persistence/                # 로컬 DB, 파일 등 영속성 데이터 처리
+│   │   └── chat_local_datasource.dart
+│   ├── remote/                     # 외부 API 등 원격 데이터 처리
+│   │   └── chat_remote_datasource.dart
+│   ├── models/                     # 데이터 변환 모델 (DTOs)
+│   └── repositories/               # Repository 구현체
+│
+└── presentation/                   # 🎨 UI 어댑터 (Incoming)
+    ├── bloc/                       # 상태 관리
     │   ├── chat_bloc.dart
     │   ├── chat_event.dart
     │   └── chat_state.dart
-    ├── screens/                   # 화면 위젯
+    ├── screens/                    # 화면 위젯
     │   └── chat_screen.dart
-    ├── widgets/                   # 재사용 위젯
+    ├── widgets/                    # 재사용 위젯
     │   └── message_bubble_widget.dart
-    └── theme/                     # UI 테마
+    └── theme/                      # UI 테마
         └── app_theme.dart
 ```
 
@@ -83,11 +84,11 @@ lib/
 class MessageEntity { }
 class UserEntity { }
 
-// ✅ Use Cases: 동사 + UseCase
+// ✅ Use Cases: 동사 + UseCase (Application Layer)
 class SendMessageUseCase { }
 class GetMessagesUseCase { }
 
-// ✅ Repositories: 명사 + Repository (인터페이스)
+// ✅ Repositories: 명사 + Repository (Domain Layer, Interface)
 abstract class ChatRepository { }
 abstract class UserRepository { }
 
@@ -132,16 +133,18 @@ class ChatLoaded extends ChatState { }
 ### ✅ 허용되는 의존성 방향
 
 ```
-Presentation → Domain ← Data
-     ↓           ↓       ↓
-    Core ←     Core ←   Core
+Presentation → Application → Domain
+     ↓              ↓           ↓
+   Core           Core         Core
+                    ↑           ↑
+          Infrastructure   → Domain
 ```
 
 ### ❌ 금지되는 의존성
 
 - **Domain → 다른 레이어** (완전 격리 필수)
-- **Presentation → Data** (직접 접근 금지)
-- **Data → Presentation** (역방향 의존성 금지)
+- **Presentation → Infrastructure** (직접 접근 금지)
+- **Infrastructure → Presentation** (역방향 의존성 금지)
 
 ---
 
@@ -303,7 +306,7 @@ import '../../domain/repositories/chat_repository.dart';
 
 ```dart
 // ❌ 잘못된 예시 - Data 직접 접근
-import '../../data/repositories/chat_repository_impl.dart'; // 금지!
+import '../../data/repositories/chat_persistence.dart'; // 금지!
 
 // ✅ 올바른 예시 - Domain UseCase 사용
 import '../../domain/usecases/send_message_usecase.dart';

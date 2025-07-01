@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../entities/message_entity.dart';
-import '../failures/failure.dart';
-import '../repositories/chat_repository.dart';
+import '../../domain/entities/message_entity.dart';
+import '../../domain/failures/failure.dart';
+import '../../domain/repositories/chat_repository.dart';
 
 @injectable
 class GetMessagesUseCase {

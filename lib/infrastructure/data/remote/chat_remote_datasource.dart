@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../models/message_model.dart';
-import '../../domain/entities/message_entity.dart';
+import '../../../domain/entities/message_entity.dart';
 
 abstract class ChatRemoteDataSource {
   Future<MessageModel> sendMessage(String content);

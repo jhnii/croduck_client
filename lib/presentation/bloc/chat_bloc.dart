@@ -1,9 +1,11 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../application/usecases/get_messages_usecase.dart';
+import '../../application/usecases/send_message_usecase.dart';
 import '../../domain/entities/message_entity.dart';
-import '../../domain/usecases/get_messages_usecase.dart';
-import '../../domain/usecases/send_message_usecase.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';

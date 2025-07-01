@@ -3,16 +3,16 @@ import 'package:injectable/injectable.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/failures/failure.dart';
 import '../../domain/repositories/chat_repository.dart';
-import '../datasources/chat_local_datasource.dart';
-import '../datasources/chat_remote_datasource.dart';
-import '../models/message_model.dart';
+import '../../infrastructure/data/models/message_model.dart';
+import '../../infrastructure/data/local/chat_local_datasource.dart';
+import '../../infrastructure/data/remote/chat_remote_datasource.dart';
 
 @Injectable(as: ChatRepository)
-class ChatRepositoryImpl implements ChatRepository {
+class ChatPersistence implements ChatRepository {
   final ChatRemoteDataSource remoteDataSource;
   final ChatLocalDataSource localDataSource;
 
-  ChatRepositoryImpl(this.remoteDataSource, this.localDataSource);
+  ChatPersistence(this.remoteDataSource, this.localDataSource);
 
   @override
   Future<Either<Failure, List<MessageEntity>>> getMessages() async {
